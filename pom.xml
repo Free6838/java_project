@@ -27,6 +27,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-site-plugin</artifactId>
+			<version>3.11.0</version>
+		</dependency> 
 	</dependencies>
 
 	<build>
@@ -43,11 +48,6 @@
 					<argLine>--enable-preview</argLine>
 				</configuration>
 			</plugin>
-			<dependency>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-site-plugin</artifactId>
-				<version>3.11.0</version>
-			</dependency> 
 		</plugins>
 	</build>
 	<reporting>
