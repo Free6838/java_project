@@ -98,8 +98,9 @@ pipeline{
         stage("Ansible Download Artifact"){
             steps{
                 script{
+                    def ArtifactPath = "${WORKSPACE}/"
                     pom = readMavenPom file: "pom.xml";
-                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} username=$NEXUS_USER_USR password=$NEXUS_USER_PSW\"
+                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
                     """
                         
                 }
