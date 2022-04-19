@@ -1,4 +1,4 @@
-FROM openjdk11:ubi
+FROM openjdk11
 RUN mkdir /app
 WORKDIR /app
 COPY /target/*.jar interview.jar
