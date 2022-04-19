@@ -9,4 +9,4 @@
         version: "{{ version }}"
         username: "{{ username }}"
         password: "{{ password }}"
-        dest: /target/
+        dest: "{{ workdir }}"
