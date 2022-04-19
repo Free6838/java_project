@@ -1,0 +1,112 @@
+pipeline{
+    agent any
+    
+    tools {
+        maven "my_maven_3.6.3"
+        
+    }
+    environment{
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL="10.104.115.62:8081"
+        NEXUS_REPOSITORY="maven-releases"
+        NEXUS_CREDENTIAL_ID='nexus-cred'
+        NEXUS_USER = credentials('nexus-cred')
+        NEXUS_PASS = credentials('nexus-cred')
+        
+    }
+    stages{
+        stage("SCM Checkout and cleanup"){
+            steps{
+                git branch: 'main', credentialsId: 'git_ssh', url: 'git@github.com:Free6838/java_project.git'
+                sh("mvn clean")
+                echo "$NEXUS_USER_USR"
+            }
+        }
+        stage("compile"){
+            steps{
+                sh("mvn compile")
+            }
+        }
+        stage("test"){
+            steps{
+                sh("mvn test surefire-report:report")
+                publishHTML target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'target/site',
+                    reportFiles: 'surefire-report.html',
+                    reportName: 'Surefire Report'
+                  ]                
+            }
+        }
+        
+        stage("package"){
+            steps{
+                sh("mvn package")
+            }
+        }
+
+        stage("publish to nexus") {
+            steps {
+                script {
+                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    pom = readMavenPom file: "pom.xml";
+                    // Find built artifact under target folder
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    // Print some info from the artifact found
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    // Extract the path from the File found
+                    artifactPath = filesByGlob[0].path;
+                    // Assign to a boolean response verifying If the artifact name exists
+                    artifactExists = fileExists artifactPath;
+                    
+                    if(artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+                        
+                        nexusArtifactUploader(
+                            nexusVersion: NEXUS_VERSION,
+                            protocol: NEXUS_PROTOCOL,
+                            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            version: pom.version,
+                            repository: NEXUS_REPOSITORY,
+                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                // Artifact generated such as .jar, .ear and .war files.
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging],
+
+                                // Lets upload the pom.xml file for additional information for Transitive dependencies
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: "pom.xml",
+                                type: "pom"]
+                            ]
+                        );
+
+                    } else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
+            }
+        }
+        
+        stage("Ansible Download Artifact"){
+            steps{
+                script{
+                    pom = readMavenPom file: "pom.xml";
+                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} username=$NEXUS_USER_USR password=$NEXUS_USER_PSW\"
+                    """
+                        
+                }
+
+            }
+        }
+
+    }
+}
+
