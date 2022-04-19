@@ -102,12 +102,29 @@ pipeline{
                     pom = readMavenPom file: "pom.xml";
                     sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
                     """
+                    echo("${WORKSPACE}")
+                    
                         
                 }
 
             }
         }
+        
+        
+        stage("Build Docker Image"){
+            steps{
+                dir("${WORKSPACE}"){ // put the path of Dockerfile
+                script{
+                    my_images = docker.build("test")
+                }
+            }
+            }
+
+        }
+        
+        
 
     }
+    
 }
 
