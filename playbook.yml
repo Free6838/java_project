@@ -1,10 +1,12 @@
-tasks:
-- name: download artifacts
-    maven_artifact:
-      group_id: "{{ groupid }}"
-      artifact_id: "{{ artifact }}"
-      repository_url: 'http://10.104.115.62:8081/repository/maven-releases/'
-      version: "{{ version }}"
-      username: "{{ username }}"
-      password: "{{ password }}"
-      dest: /opt
+- name: "test"
+  hosts: localhost
+  tasks:
+    - name: download artifacts
+      maven_artifact:
+        group_id: "{{ groupid }}"
+        artifact_id: "{{ artifact }}"
+        repository_url: 'http://10.104.115.62:8081/repository/maven-releases/'
+        version: "{{ version }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        dest: /opt
