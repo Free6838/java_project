@@ -46,8 +46,6 @@ pipeline{
             }
         }
         stage("publish to nexus") {
-            
-
             parallel{
                 stage("publish SNAPSHOT"){
                     steps{
@@ -88,10 +86,8 @@ pipeline{
                             }
                         }
                     }
-
                 }
                 stage("publish RELEASE"){
-
                     steps{
                         script {
                             pom = readMavenPom file: "pom.xml"; // Read POM xml file using 'readMavenPom' step
@@ -128,8 +124,7 @@ pipeline{
                                 error "*** File: ${artifactPath}, could not be found";
                             }
                         }
-                    }
-                    
+                    } 
                 }
             }
         }
@@ -152,8 +147,11 @@ pipeline{
             steps{
                 dir("${WORKSPACE}"){ // put the path of Dockerfile
                 script{
-                    my_images = docker.build("release-2")
-                    sh("docker run -p 8080:8080 -d release-2:latest")
+                    pom = readMavenPom file: "pom.xml";
+                    build_version = pom.version
+                    build_name = pom.artifactId
+                    my_images = docker.build("$build_name:$build_version")
+                    sh("docker run -p 8080:8080 -d $build_version:$build_version")
                 }
             }
             }
