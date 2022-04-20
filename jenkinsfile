@@ -41,13 +41,11 @@ pipeline{
                   ]                
             }
         }
-        
         stage("package"){
             steps{
                 sh("mvn package")
             }
         }
-
         stage("publish to nexus") {
             steps {
                 script {
@@ -94,7 +92,6 @@ pipeline{
                 }
             }
         }
-        
         stage("Ansible Download Artifact"){
             steps{
                 script{
@@ -109,13 +106,11 @@ pipeline{
 
             }
         }
-        
-        
         stage("Build Docker Image"){
             steps{
                 dir("${WORKSPACE}"){ // put the path of Dockerfile
                 script{
-                    my_images = docker.build("test")
+                    my_images = docker.build("release")
                 }
             }
             }
