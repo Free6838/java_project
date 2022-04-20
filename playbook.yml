@@ -1,5 +1,7 @@
 - name: "test"
   hosts: localhost
+  vars:
+    maven-releases: "{{maven-releases}}"
   tasks:
     - name: download artifacts
       maven_artifact:
