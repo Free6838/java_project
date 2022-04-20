@@ -151,7 +151,7 @@ pipeline{
                     build_version = pom.version
                     build_name = pom.artifactId
                     my_images = docker.build("$build_name:$build_version")
-                    sh("docker run -p 8080:8080 -d $build_version:$build_version")
+                    sh("docker run -p 8080:8080 -d $build_name:$build_version")
                 }
             }
             }
