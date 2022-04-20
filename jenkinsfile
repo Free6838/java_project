@@ -52,8 +52,8 @@ pipeline{
                 stage("publish SNAPSHOT"){
                     steps{
                         script {
-                            NEXUS_REPOSITORY_SNAPSHOTS = "${pom.artifactId}-snapshot"
                             pom = readMavenPom file: "pom.xml"; // Read POM xml file using 'readMavenPom' step
+                            NEXUS_REPOSITORY_SNAPSHOTS = "${pom.artifactId}-snapshot"
                             filesByGlob = findFiles(glob: "target/*.${pom.packaging}"); // Print path - artifact found
                             echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                             artifactPath = filesByGlob[0].path; // Extract the path from the File found
@@ -93,8 +93,8 @@ pipeline{
 
                     steps{
                         script {
-                            NEXUS_REPOSITORY_RELEASES = "${pom.artifactId}-release"
                             pom = readMavenPom file: "pom.xml"; // Read POM xml file using 'readMavenPom' step
+                            NEXUS_REPOSITORY_RELEASES = "${pom.artifactId}-release"
                             filesByGlob = findFiles(glob: "target/*.${pom.packaging}"); // Print path - artifact found
                             echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                             artifactPath = filesByGlob[0].path; // Extract the path from the File found
