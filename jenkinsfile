@@ -9,7 +9,6 @@ pipeline{
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
         NEXUS_URL="10.104.115.62:8081"
-        NEXUS_REPOSITORY="maven-releases"
         NEXUS_CREDENTIAL_ID='nexus-cred'
         NEXUS_USER = credentials('nexus-cred')
         NEXUS_PASS = credentials('nexus-cred')
@@ -49,8 +48,10 @@ pipeline{
         stage("publish to nexus") {
             steps {
                 script {
-                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    
+                    // Read POM xml file using 'readMavenPom' step
                     pom = readMavenPom file: "pom.xml";
+                    NEXUS_REPOSITORY = pom.version.endsWith("SNAPSHOT") ? "${pom.artifactId}-snapshot":"${pom.artifactId}-release"
                     // Find built artifact under target folder
                     filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
                     // Print some info from the artifact found
@@ -59,6 +60,7 @@ pipeline{
                     artifactPath = filesByGlob[0].path;
                     // Assign to a boolean response verifying If the artifact name exists
                     artifactExists = fileExists artifactPath;
+
                     
                     if(artifactExists) {
                         echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
@@ -106,11 +108,12 @@ pipeline{
 
             }
         }
-        stage("Build Docker Image"){
+        stage("Build & Deploy Docker Image"){
             steps{
                 dir("${WORKSPACE}"){ // put the path of Dockerfile
                 script{
-                    my_images = docker.build("release")
+                    my_images = docker.build("release-2")
+                    sh("docker run -p 8080:8080 -d release-2:latest")
                 }
             }
             }
