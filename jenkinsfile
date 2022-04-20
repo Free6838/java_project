@@ -58,6 +58,7 @@ pipeline{
                             echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                             artifactPath = filesByGlob[0].path; // Extract the path from the File found
                             artifactExists = fileExists artifactPath; // boolean If the artifact name exists
+                            
                             if(artifactExists) {
                                 echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
 
@@ -66,16 +67,16 @@ pipeline{
                                     protocol: NEXUS_PROTOCOL,
                                     nexusUrl: NEXUS_URL,
                                     groupId: pom.groupId,
-                                    version: pom.version,
+                                    version: "${pom.version}-snapshot",
                                     repository: NEXUS_REPOSITORY_SNAPSHOTS,
                                     credentialsId: NEXUS_CREDENTIAL_ID,
                                     artifacts: [
-                                        [artifactId: pom.artifactId,
+                                        [artifactId: "${pom.artifactId}-snapshot",
                                         classifier: '',
                                         file: artifactPath,
                                         type: pom.packaging],
                                         //upload the pom.xml file for additional information for Transitive dependencies
-                                        [artifactId: pom.artifactId,
+                                        [artifactId: "${pom.artifactId}-snapshot",
                                         classifier: '',
                                         file: "pom.xml",
                                         type: "pom"]
