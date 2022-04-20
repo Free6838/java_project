@@ -96,7 +96,7 @@ pipeline{
                     def ArtifactPath = "${WORKSPACE}/"
                     pom = readMavenPom file: "pom.xml";
                     echo("${NEXUS_REPOSITORY}")
-                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} maven-releases=${NEXUS_REPOSITORY} username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
+                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} maven-releases=$NEXUS_REPOSITORY username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
                     """
                     echo("${WORKSPACE}")
                     
