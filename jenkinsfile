@@ -46,22 +46,18 @@ pipeline{
             }
         }
         stage("publish to nexus") {
-            // Read POM xml file using 'readMavenPom' step
-            pom = readMavenPom file: "pom.xml";
-            NEXUS_REPOSITORY = pom.version.endsWith("SNAPSHOT") ? "${pom.artifactId}-snapshot":"${pom.artifactId}-release"
-            // Find built artifact under target folder
-            filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-            // Print path - artifact found
-            echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-            // Extract the path from the File found
-            artifactPath = filesByGlob[0].path;
-            // boolean If the artifact name exists
-            artifactExists = fileExists artifactPath;
+            
 
             parallel{
                 stage("publish SNAPSHOT"){
                     NEXUS_REPOSITORY_SNAPSHOTS = "${pom.artifactId}-snapshot"
                     steps{
+                        pom = readMavenPom file: "pom.xml"; // Read POM xml file using 'readMavenPom' step
+                        filesByGlob = findFiles(glob: "target/*.${pom.packaging}"); // Print path - artifact found
+                        echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                        artifactPath = filesByGlob[0].path; // Extract the path from the File found
+                        artifactExists = fileExists artifactPath; // boolean If the artifact name exists
+
                         script {
                             if(artifactExists) {
                                 echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
@@ -97,6 +93,11 @@ pipeline{
                 stage("publish RELEASE"){
                     NEXUS_REPOSITORY_RELEASES = "${pom.artifactId}-release"
                     steps{
+                        pom = readMavenPom file: "pom.xml"; // Read POM xml file using 'readMavenPom' step
+                        filesByGlob = findFiles(glob: "target/*.${pom.packaging}"); // Print path - artifact found
+                        echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                        artifactPath = filesByGlob[0].path; // Extract the path from the File found
+                        artifactExists = fileExists artifactPath; // boolean If the artifact name exists
                         script {   
                             if(artifactExists) {
                                 echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
