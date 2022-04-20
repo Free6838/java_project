@@ -71,7 +71,7 @@ pipeline{
                                     repository: NEXUS_REPOSITORY_SNAPSHOTS,
                                     credentialsId: NEXUS_CREDENTIAL_ID,
                                     artifacts: [
-                                        [artifactId: "${pom.artifactId}-snapshot",
+                                        [artifactId: "${pom.artifactId}",
                                         classifier: '',
                                         file: artifactPath,
                                         type: pom.packaging],
