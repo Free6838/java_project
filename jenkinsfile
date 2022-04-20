@@ -46,47 +46,88 @@ pipeline{
             }
         }
         stage("publish to nexus") {
-            steps {
-                script {
-                    // Read POM xml file using 'readMavenPom' step
-                    pom = readMavenPom file: "pom.xml";
-                    NEXUS_REPOSITORY = pom.version.endsWith("SNAPSHOT") ? "${pom.artifactId}-snapshot":"${pom.artifactId}-release"
-                    // Find built artifact under target folder
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    // Print path - artifact found
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    // Extract the path from the File found
-                    artifactPath = filesByGlob[0].path;
-                    // boolean If the artifact name exists
-                    artifactExists = fileExists artifactPath;
-                    
-                    if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-                        
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: pom.version,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                //upload the pom.xml file for additional information for Transitive dependencies
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        );
+            // Read POM xml file using 'readMavenPom' step
+            pom = readMavenPom file: "pom.xml";
+            NEXUS_REPOSITORY = pom.version.endsWith("SNAPSHOT") ? "${pom.artifactId}-snapshot":"${pom.artifactId}-release"
+            // Find built artifact under target folder
+            filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+            // Print path - artifact found
+            echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+            // Extract the path from the File found
+            artifactPath = filesByGlob[0].path;
+            // boolean If the artifact name exists
+            artifactExists = fileExists artifactPath;
 
-                    } else {
-                        error "*** File: ${artifactPath}, could not be found";
+            parallel{
+                stage("publish SNAPSHOT"){
+                    NEXUS_REPOSITORY_SNAPSHOTS = "${pom.artifactId}-snapshot"
+                    steps{
+                        script {
+                            if(artifactExists) {
+                                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+
+                                nexusArtifactUploader(
+                                    nexusVersion: NEXUS_VERSION,
+                                    protocol: NEXUS_PROTOCOL,
+                                    nexusUrl: NEXUS_URL,
+                                    groupId: pom.groupId,
+                                    version: pom.version,
+                                    repository: NEXUS_REPOSITORY_SNAPSHOTS,
+                                    credentialsId: NEXUS_CREDENTIAL_ID,
+                                    artifacts: [
+                                        [artifactId: pom.artifactId,
+                                        classifier: '',
+                                        file: artifactPath,
+                                        type: pom.packaging],
+                                        //upload the pom.xml file for additional information for Transitive dependencies
+                                        [artifactId: pom.artifactId,
+                                        classifier: '',
+                                        file: "pom.xml",
+                                        type: "pom"]
+                                    ]
+                                );
+
+                            } else {
+                                error "*** File: ${artifactPath}, could not be found";
+                            }
+                        }
                     }
+
+                }
+                stage("publish RELEASE"){
+                    NEXUS_REPOSITORY_RELEASES = "${pom.artifactId}-release"
+                    steps{
+                        script {   
+                            if(artifactExists) {
+                                echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+
+                                nexusArtifactUploader(
+                                    nexusVersion: NEXUS_VERSION,
+                                    protocol: NEXUS_PROTOCOL,
+                                    nexusUrl: NEXUS_URL,
+                                    groupId: pom.groupId,
+                                    version: pom.version,
+                                    repository: NEXUS_REPOSITORY_RELEASES,
+                                    credentialsId: NEXUS_CREDENTIAL_ID,
+                                    artifacts: [
+                                        [artifactId: pom.artifactId,
+                                        classifier: '',
+                                        file: artifactPath,
+                                        type: pom.packaging],
+                                        //upload the pom.xml file for additional information for Transitive dependencies
+                                        [artifactId: pom.artifactId,
+                                        classifier: '',
+                                        file: "pom.xml",
+                                        type: "pom"]
+                                    ]
+                                );
+
+                            } else {
+                                error "*** File: ${artifactPath}, could not be found";
+                            }
+                        }
+                    }
+                    
                 }
             }
         }
@@ -95,8 +136,8 @@ pipeline{
                 script{
                     def ArtifactPath = "${WORKSPACE}/"
                     pom = readMavenPom file: "pom.xml";
-                    echo("${NEXUS_REPOSITORY}")
-                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} mavenreleases=$NEXUS_REPOSITORY username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
+                    echo("downloading artifact from ${NEXUS_REPOSITORY_RELEASES}")
+                    sh """ansible-playbook playbook.yml --extra-vars=\"groupid=${pom.groupId} artifact=${pom.artifactId} version=${pom.version} mavenreleases=$NEXUS_REPOSITORY_RELEASES username=$NEXUS_USER_USR password=$NEXUS_USER_PSW workdir=$ArtifactPath"
                     """
                     echo("${WORKSPACE}")
                     
