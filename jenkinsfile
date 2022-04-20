@@ -3,7 +3,6 @@ pipeline{
     
     tools {
         maven "my_maven_3.8.5"
-        
     }
     environment{
         NEXUS_VERSION = "nexus3"
@@ -12,7 +11,6 @@ pipeline{
         NEXUS_CREDENTIAL_ID='nexus-cred'
         NEXUS_USER = credentials('nexus-cred')
         NEXUS_PASS = credentials('nexus-cred')
-        
     }
     stages{
         stage("SCM Checkout and cleanup"){
@@ -39,6 +37,11 @@ pipeline{
                     reportName: 'Surefire Report'
                   ]                
             }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
         }
         stage("package"){
             steps{
@@ -56,10 +59,8 @@ pipeline{
                             echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                             artifactPath = filesByGlob[0].path; // Extract the path from the File found
                             artifactExists = fileExists artifactPath; // boolean If the artifact name exists
-                            
                             if(artifactExists) {
                                 echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-
                                 nexusArtifactUploader(
                                     nexusVersion: NEXUS_VERSION,
                                     protocol: NEXUS_PROTOCOL,
@@ -98,7 +99,6 @@ pipeline{
                             artifactExists = fileExists artifactPath; // boolean If the artifact name exists   
                             if(artifactExists) {
                                 echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-
                                 nexusArtifactUploader(
                                     nexusVersion: NEXUS_VERSION,
                                     protocol: NEXUS_PROTOCOL,
@@ -157,9 +157,6 @@ pipeline{
             }
 
         }
-        
-        
-
     }
     
 }
